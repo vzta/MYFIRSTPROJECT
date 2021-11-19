@@ -9,9 +9,12 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
+import matplotlib.pyplot as plt
+from datetime import *
+
 
 SCOPES = ['https://www.googleapis.com/auth/sqlservice.admin']
-SERVICE_ACCOUNT_FILE = 'creds.json'
+SERVICE_ACCOUNT_FILE = '/content/creds.json'
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 creds = None
@@ -19,20 +22,15 @@ creds = None
 creds = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
-
-
 SAMPLE_SPREADSHEET_ID = '1lnw5LKsE8z7LqqzABfnE0xpHardHwP27016BPbKIegY'
 
 service = build('sheets', 'v4', credentials=creds)
 
 # Call the Sheets API
 sheet1 = service.spreadsheets()
-result = sheet1.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
-                            range="ads!A1:D51").execute()
-values = result.get('values', [])
 
 
-
+#___________________________________________________________________________________
 scope = ["https://spreadsheets.google.com/feeds",
          'https://www.googleapis.com/auth/spreadsheets',
          "https://www.googleapis.com/auth/drive.file",
@@ -43,13 +41,18 @@ client = gspread.authorize(creds)
 sheet=client.open("ads").sheet1
 
 data=sheet.get_all_records()
+
 df = pd.DataFrame(sheet.get_all_records())
+
+
 #_______________________________________________________________________________
 
 #These are strings to make the needed function in GoogleSheet. (It was the easiest way to me even if it's look complicated.)
 my_string="=GOOGLEFINANCE({},{},{})"
 my_string2="=GOOGLEFINANCE({},{})"
+my_string3="=GOOGLEFINANCE({},{},{},{})"
 t='""'
+
 #____________________________________________________________________
 
 #These variables will be used later. (Historical price, Date, and a list to fill with both values.)
@@ -70,12 +73,12 @@ next_available_row(sheet)
 
 #___________________________________________________________________
 #FUNCTION TO CLEAN VALUES OF GOOGLE SHEET AFTER REACHING CELL D50
+def clear_v(*args, range):
+  request = sheet1.values().clear(spreadsheetId=SAMPLE_SPREADSHEET_ID, range="ads!C1:H200").execute()
+  
 
-def clear_v(*args):
-  request = sheet1.values().clear(spreadsheetId=SAMPLE_SPREADSHEET_ID, range="ads!C1:D50").execute()
 #This is basically a function to make a watchlist of stocks(redundant I know)
 #These tickers are for CEDEARS (ARGENTINIAN ADS)
-
 def watchlist(*args):
   symbol_list=[]
   while True:
@@ -90,7 +93,7 @@ def watchlist(*args):
   val=sheet.acell("D51")
   if val.value=='FALSE':
     clear_v()  
-  
+
   
 def rendimiento_compra(): #function to watch your performance in the stocks. 
   global ticker
@@ -100,12 +103,12 @@ def rendimiento_compra(): #function to watch your performance in the stocks.
   fecha_final=t[:1]+fecha+t[1:]
   n=float(input("Ingrese la cantidad de acciones compradas: "))
 
-  #___________________________________________________________________________________
-  funcion2=my_string2.format(ticker_final,'"price"')
-  funcion=my_string.format(ticker_final,'"price"',fecha_final)
-  sheet.update_acell("C{}".format(next_row), funcion2)
+  #__GF_FUNCTION STANDS FOR 'GOOGLE FINANCE FUNCTION'____________________________________________________________
+  GF_FUNCTION2=my_string2.format(ticker_final,'"price"')
+  GF_FUNCTION1=my_string.format(ticker_final,'"price"',fecha_final)
+  sheet.update_acell("C{}".format(next_row), GF_FUNCTION2)
   precio_actual=sheet.acell("C{}".format(next_row)).value
-  sheet.update_acell("D1",funcion)
+  sheet.update_acell("D1",GF_FUNCTION1)
   #All of these formating functions above are to make the Spreadsheet functions work.
   
   #Accesing to the values.
@@ -121,5 +124,33 @@ def rendimiento_compra(): #function to watch your performance in the stocks.
   print("Su ganancia/pérdida es de: $", (float(rendimiento))*(n))
   print("porcentage de ganancia/pérdida es de", float(rendimiento*100)/float(fecha_precio), "%")
 
+def plot_performance(*args):
+  ticker1=input("Ingrese Ticker: ")
+  #__setting up the start and end date from a year ago till today.
+  fecha_f=datetime.today().strftime('%Y/%m/%d')
+  n_today = datetime.now() - timedelta(days=365)
+  fecha_i=n_today.strftime("%Y/%m/%d")
+  #______formating the strings to get the functions___
+  ticker_f = t[:1]+ticker1+t[1:]
+  fecha_i=t[:1]+fecha_i+t[1:]
+  fecha_f=t[:1]+fecha_f+t[1:]
+  GF_FUNCTION = my_string3.format(ticker_f.upper(),'"price"',fecha_i, fecha_f)
+  gf_list=[[GF_FUNCTION]]
+  #request to google sheet api________________________________
+  request = sheet1.values().update(spreadsheetId=SAMPLE_SPREADSHEET_ID,
+                                     range="hist!A1:B243", valueInputOption="USER_ENTERED",
+                                     body={"values":gf_list}).execute()
+                                     
+  result = sheet1.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
+                            range="hist!A2:B243").execute()
+  values = result.get('values', [])
+  #_____ploting functions_________________________________
+  col_names=['Date','Close']
+  df4=pd.DataFrame(values, columns=col_names)
+  df5=df4.head(240).set_index('Date')
+  df6=df5['Close'].replace(',','.', regex=True).astype(float)
+  df6.head(240).plot(x='Date',y='Close',color='Green',figsize=(20,10),title=ticker_f.upper())
+  #I created all this dataframes from excel google sheet because for some reason the data wasn't considered as a numeric type.
 rendimiento_compra()
 watchlist()
+plot_performance()
