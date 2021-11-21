@@ -2,7 +2,6 @@ import gspread
 import pandas as pd
 from pprint import pprint
 from oauth2client.service_account import ServiceAccountCredentials
-from __future__ import print_function
 import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
