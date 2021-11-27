@@ -14,8 +14,7 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 creds = None
 
-creds = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
 SAMPLE_SPREADSHEET_ID = '1lnw5LKsE8z7LqqzABfnE0xpHardHwP27016BPbKIegY'
 
@@ -141,7 +140,7 @@ def rendimiento_compra():  # function to watch your performance in the stocks.
 def plot_performance(*args):
     try: #Same thing mentioned before!
 
-        ticker1 = st.text_input("Ingrese Ticker: ")
+        ticker1 = st.text_input("Enter the ticker symbol: ")
         data = yf.download(tickers=f"{ticker1}", period='1y', interval='1d', index_col="Adj Close", parse_dates=True)
         data.to_csv("CACA")
         df = pd.read_csv("CACA")
