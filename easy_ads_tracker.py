@@ -7,14 +7,20 @@ from google.oauth2 import service_account
 import yfinance as yf
 import plotly.graph_objs as go
 
+credentials = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"],
+    scopes=[
+        "https://www.googleapis.com/auth/spreadsheets",
+    ],
+)
 
-SCOPES = ['https://www.googleapis.com/auth/sqlservice.admin']
-SERVICE_ACCOUNT_FILE = 'creds.json'
+
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 creds = None
 
-creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+creds = service_account.Credentials.from_service_account_file(
+    st.secrets["gcp_service_account"], scopes=SCOPES)
 
 SAMPLE_SPREADSHEET_ID = '1lnw5LKsE8z7LqqzABfnE0xpHardHwP27016BPbKIegY'
 
@@ -28,8 +34,8 @@ scope = ["https://spreadsheets.google.com/feeds",
          'https://www.googleapis.com/auth/spreadsheets',
          "https://www.googleapis.com/auth/drive.file",
          "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("creds.json", scope)
-client = gspread.authorize(creds)
+creds = ServiceAccountCredentials.from_json_keyfile_name(st.secrets["gcp_service_account"], scope)
+client = gspread.authorize(credentials)
 
 sheet = client.open("ads").sheet1
 
