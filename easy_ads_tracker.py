@@ -6,7 +6,19 @@ from googleapiclient.discovery import build
 from google.oauth2 import service_account
 import yfinance as yf
 import plotly.graph_objs as go
+import subprocess
 
+## first download the creds file
+subprocess.call([
+    'curl',
+    '-H',
+    f"Authorization: token {st.secrets['gh_pat']}",
+    '-H',
+    'Accept: application/vnd.github.v3.raw',
+    '-O',
+    '-L',
+    st.secrets['creds_file_url']
+])
 
 SCOPES = ['https://www.googleapis.com/auth/sqlservice.admin']
 SERVICE_ACCOUNT_FILE = 'creds.json'
@@ -15,7 +27,6 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 creds = None
 
 creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-
 SAMPLE_SPREADSHEET_ID = '1lnw5LKsE8z7LqqzABfnE0xpHardHwP27016BPbKIegY'
 
 service = build('sheets', 'v4', credentials=creds, cache_discovery=False)
@@ -74,8 +85,6 @@ def clear_v(*args, range):
 
 # This is basically a function to make a watchlist of stocks(redundant I know)
 # These tickers are for CEDEARS (ARGENTINIAN ADS)
-
-import streamlit as st
 
 
 def watchlist(*args):
