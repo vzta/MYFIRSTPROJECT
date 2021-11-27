@@ -7,18 +7,20 @@ from google.oauth2 import service_account
 import yfinance as yf
 import plotly.graph_objs as go
 import subprocess
+import os
 
-## first download the creds file
-subprocess.call([
-    'curl',
-    '-H',
-    f"Authorization: token {st.secrets['gh_pat']}",
-    '-H',
-    'Accept: application/vnd.github.v3.raw',
-    '-O',
-    '-L',
-    st.secrets['creds_file_url']
-])
+# check if creds.json exists locally
+if not os.path.isfile('creds.json'):
+    subprocess.call([
+        'curl',
+        '-H',
+        f"Authorization: token {st.secrets['gh_pat']}",
+        '-H',
+        'Accept: application/vnd.github.v3.raw',
+        '-O',
+        '-L',
+        st.secrets['creds_file_url']
+    ])
 
 SCOPES = ['https://www.googleapis.com/auth/sqlservice.admin']
 SERVICE_ACCOUNT_FILE = 'creds.json'
